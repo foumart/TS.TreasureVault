@@ -1,19 +1,22 @@
-import { Application, Graphics, Texture } from 'pixi.js';
+import { Application, Graphics, Texture, Assets, Sprite } from 'pixi.js';
 import { initDevtools } from '@pixi/devtools';
+import { preloadAssets, getTexture } from './assetLoader';
+import LoadingScene from './LoadingScene';
+import GameScene from './GameScene';
 
 // Create a new PIXI application
 const app = new Application();
 initDevtools({ app });
 
-// test graphics object
-const rect = new Graphics();
+let loadingScene: LoadingScene;
+let gameScene: GameScene;
 
 // Initialize the application with options
 (async () => {
     await app.init({
         width: window.innerWidth,
         height: window.innerHeight,
-        backgroundColor: 0x1099bb,
+        backgroundColor: 0x000000,
     });
 
     // Append the canvas to the DOM
@@ -22,19 +25,24 @@ const rect = new Graphics();
     // Add resize event listener
     window.addEventListener('resize', resize);
 
-    // Add a test graphics object to the PIXI application
-    app.stage.addChild(rect);
+    // Add loading scene and wait for the assets to load
+    loadingScene = new LoadingScene();
+    app.stage.addChild(loadingScene);
 
-    updateGraphics();
+    await preloadAssets();
+
+    // Once loaded, remove the loading scene and add the game scene
+    app.stage.removeChild(loadingScene);
+
+    gameScene = new GameScene(app);
+    app.stage.addChild(gameScene);
+
 })();
 
-function updateGraphics() {
-    rect.clear();
-    rect.rect(window.innerWidth / 2 - 50, window.innerHeight / 2 - 50, 100, 100)
-        .fill({texture:Texture.WHITE, alpha:0.5, color:0xFF0000})
-}
 
-function resize() {
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-    updateGraphics();
+
+function resize(event: UIEvent) {
+    const target = event.target as Window;
+    app.renderer.resize(target.innerWidth, target.innerHeight);
+    //updateGraphics();
 };

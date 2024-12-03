@@ -18,6 +18,19 @@ module.exports = {
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },
+            {
+                test: /\.(png|jpe?g)$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[path][name].[ext]',
+                            outputPath: '../',
+                            publicPath: '/assets/',
+                        },
+                    },
+                ],
+            },
         ],
     },
     mode: 'development',
