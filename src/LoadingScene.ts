@@ -1,6 +1,6 @@
 import { Text, TextStyle } from "pixi.js";
 
-import Scene from "./scene";
+import Scene from "./Scene";
 
 class LoadingScene extends Scene {
     
@@ -14,12 +14,12 @@ class LoadingScene extends Scene {
     init() {
         const style = new TextStyle({
             fontFamily: "Verdana",
-            fontSize: 20,
-            fill: "white",
+            fontSize: 16,
+            fill: "#285861",
         });
             
         const text = new Text({
-            text: "Loading...",
+            text: "Loading Treasure Vault...",
             style: style
         });
     

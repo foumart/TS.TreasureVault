@@ -16,7 +16,7 @@ let gameScene: GameScene;
     await app.init({
         width: window.innerWidth,
         height: window.innerHeight,
-        backgroundColor: 0x000000,
+        backgroundColor: 0x7fbaa6,
     });
 
     // Append the canvas to the DOM
@@ -44,5 +44,5 @@ let gameScene: GameScene;
 function resize(event: UIEvent) {
     const target = event.target as Window;
     app.renderer.resize(target.innerWidth, target.innerHeight);
-    //updateGraphics();
+    gameScene.resize();
 };
