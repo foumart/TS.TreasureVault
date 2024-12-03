@@ -5,6 +5,7 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'public/dist'),
+        publicPath: '/dist/',
     },
     resolve: {
         extensions: ['.ts', '.js', '.json'],
@@ -36,6 +37,9 @@ module.exports = {
         },
         compress: true,
         port: 9000,
-        open: true
+        open: true,
+        liveReload: true,
+        watchFiles: ['src/**/*', 'public/**/*'],
+        hot: true
     },
 };
