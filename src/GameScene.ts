@@ -1,19 +1,27 @@
-import { Application, Sprite } from "pixi.js";
+import { Application, Container, ObservablePoint, Sprite } from "pixi.js";
 
 import Scene from "./Scene";
 import { getTexture } from "./assetLoader";
+import Handle from "./Handle";
 
 class GameScene extends Scene {
     
     label: string = "GameScene";
 
     app: Application;
+    screenWidth!: number;
+    screenHeight!: number;
 
     bgr!: Sprite;
+    door!: Sprite;
+    doorOpen!: Sprite;
+    doorOpenShadow!: Sprite;
+    handle!: Handle;
+    handleShadow!: Sprite;
 
     // Define protected boundaries inside the scene to always be visible
-    minWidth: number = .5;
-    minHeight: number = .75;
+    minWidth: number = .45;
+    minHeight: number = .65;
 
     constructor(app: Application) {
         super();
@@ -24,34 +32,53 @@ class GameScene extends Scene {
     init() {
         this.bgr = new Sprite(getTexture("bg"));
         this.bgr.anchor.set(0.5);
-    
         this.addChild(this.bgr);
+
+        this.door = new Sprite(getTexture("door"));
+        this.door.anchor.set(0.5);
+        this.addChild(this.door);
+
+        this.handle = new Handle();
+        this.addChild(this.handle);
+
         this.positionElements();
     }
 
     positionElements() {
-        const screenWidth = this.app.screen.width;
-        const screenHeight = this.app.screen.height;
-        const textureWidth = this.bgr.texture.width;
-        const textureHeight = this.bgr.texture.height;
+        this.centerElement(this.bgr);
+        this.resizeElement(this.bgr.scale, this.door, 30, -22);
+        this.resizeElement(this.bgr.scale, this.handle, -18, -24);
+    }
 
-        const scaleX = screenWidth / textureWidth;
-        const scaleY = screenHeight / textureHeight;
+    resizeElement(scale: ObservablePoint, element: Sprite | Container, offsetX: number = 0, offsetY: number = 0) {
+        element.scale = scale;
+        element.x = this.screenWidth / 2 + offsetX * scale.x;
+        element.y = this.screenHeight / 2 + offsetY * scale.y;
+    }
+
+    centerElement(element: Sprite) {
+        this.screenWidth = this.app.screen.width;
+        this.screenHeight = this.app.screen.height;
+        const textureWidth = element.texture.width;
+        const textureHeight = element.texture.height;
+
+        const scaleX = this.screenWidth / textureWidth;
+        const scaleY = this.screenHeight / textureHeight;
         let scale = Math.max(scaleX, scaleY);
 
-        if (textureWidth * scale * this.minWidth > screenWidth) {
-            scale = screenWidth / (textureWidth * this.minWidth);
+        if (textureWidth * scale * this.minWidth > this.screenWidth) {
+            scale = this.screenWidth / (textureWidth * this.minWidth);
         }
 
-        if (textureHeight * scale * this.minHeight > screenHeight) {
-            scale = screenHeight / (textureHeight * this.minHeight);
+        if (textureHeight * scale * this.minHeight > this.screenHeight) {
+            scale = this.screenHeight / (textureHeight * this.minHeight);
         }
 
-        this.bgr.width = textureWidth * scale;
-        this.bgr.height = textureHeight * scale;
+        element.width = textureWidth * scale;
+        element.height = textureHeight * scale;
 
-        this.bgr.x = screenWidth / 2;
-        this.bgr.y = screenHeight / 2;
+        element.x = this.screenWidth / 2;
+        element.y = this.screenHeight / 2;
     }
 
     resize() {
