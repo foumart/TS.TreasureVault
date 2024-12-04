@@ -10,6 +10,9 @@ class Handle extends Container {
     staticHandle: Sprite;
     staticHandleMask: Graphics;
 
+    initialAngle: number = 0;
+    startRotation: number = 0;
+
     constructor() {
         super();
 
@@ -29,22 +32,55 @@ class Handle extends Container {
         this.addChild(this.staticHandle);
 
         this.staticHandleMask = new Graphics()
-        .circle(0, 0, 125)
-        .fill({color:0xFFFFFF})
-        .circle(0, 0, 98)
-        .cut()
-        .circle(0, 0, 38)
-        .fill({color:0xFFFFFF})
+            .circle(0, 0, 126.5)
+            .fill({color:0xFFFFFF})
+            .circle(0, 0, 98)
+            .cut()
+            .circle(0, 0, 38)
+            .fill({color:0xFFFFFF})
 
         this.addChild(this.staticHandleMask);
         this.staticHandle.mask = this.staticHandleMask;
 
-        gsap.to(this.handle, {rotation: this.degreesToRadians(360), duration: 2});
-        gsap.to(this.handleShadow, {rotation: this.degreesToRadians(360), duration: 2});
+        this.spinLikeCrazy();
+    }
+
+    spinLikeCrazy() {
+        this.animateRotation(720, 1.5);
+    }
+
+    animateRotation(degrees?: number, duration?: number) {
+        gsap.to([this.handle, this.handleShadow], {
+            rotation: this.degreesToRadians(degrees || 360),
+            duration: duration || 1
+        });
+    }
+
+    setStartRotation(initialAngle: number) {
+        this.initialAngle = initialAngle;
+        this.startRotation = this.handle.rotation;
+    }
+
+    rotate(currentAngle: number) {
+        const radians: number = this.startRotation + (currentAngle - this.initialAngle);
+        this.handle.rotation = radians;
+        this.handleShadow.rotation = radians;
+    }
+
+    endRotation() {
+        this.animateRotation(this.getNearestTargetAngle(this.radiansToDegrees(this.handle.rotation)), 0.25);
+    }
+
+    getNearestTargetAngle(currentDegrees: number): number {
+        return Math.round(currentDegrees / 60) * 60;
     }
 
     degreesToRadians(degrees: number): number {
         return degrees * (Math.PI / 180);
+    }
+
+    radiansToDegrees(radians: number): number {
+        return radians * (180 / Math.PI);
     }
 }
 

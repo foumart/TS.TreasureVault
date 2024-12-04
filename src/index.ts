@@ -17,6 +17,10 @@ let gameScene: GameScene;
         width: window.innerWidth,
         height: window.innerHeight,
         backgroundColor: 0x7fbaa6,
+        eventMode: 'passive',
+        eventFeatures: {
+            globalMove: false
+        }
     });
 
     // Append the canvas to the DOM

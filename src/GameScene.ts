@@ -1,4 +1,4 @@
-import { Application, Container, ObservablePoint, Sprite } from "pixi.js";
+import { Application, Container, ObservablePoint, Sprite, FederatedPointerEvent, PointData } from "pixi.js";
 
 import Scene from "./Scene";
 import { getTexture } from "./assetLoader";
@@ -19,9 +19,14 @@ class GameScene extends Scene {
     handle!: Handle;
     handleShadow!: Sprite;
 
-    // Define protected boundaries inside the scene to always be visible
+    // The background image is resized in a way to fit well in any screen size.
+    // Here we define protected boundaries and for area that will always be visible.
+    // The following values are percentages of the background image width/height.
+    // We'll use the background image's scale to set the scale of all other elements.
     minWidth: number = .45;
     minHeight: number = .65;
+
+    dragging: Boolean = false;
 
     constructor(app: Application) {
         super();
@@ -32,6 +37,7 @@ class GameScene extends Scene {
     init() {
         this.bgr = new Sprite(getTexture("bg"));
         this.bgr.anchor.set(0.5);
+        this.bgr.interactive = true;
         this.addChild(this.bgr);
 
         this.door = new Sprite(getTexture("door"));
@@ -40,7 +46,45 @@ class GameScene extends Scene {
 
         this.handle = new Handle();
         this.addChild(this.handle);
+        this.handle.interactive = true;
+        this.handle.cursor = 'pointer';
+        this.handle
+            .on("pointerdown", this.onDragStart.bind(this))
+            .on("pointerup", this.onDragEnd.bind(this))
+            .on("pointerupoutside", this.onDragEnd.bind(this))
+            .on("pointermove", this.onDragMove.bind(this));
 
+        this.positionElements();
+    }
+
+    /* Handle Interaction */
+    onDragStart(event: FederatedPointerEvent) {
+        this.dragging = true;
+        this.handle.setStartRotation(this.getAngle(event.global))
+        event.stopPropagation();
+        // listen for dragging outside the handle area so the interaction could be more convenient
+        this.bgr.on("pointermove", this.onDragMove.bind(this));
+    }
+        
+    onDragEnd() {
+        this.dragging = false;
+        this.bgr.off("pointermove", this.onDragMove.bind(this));
+        this.handle.endRotation();
+    }
+        
+    onDragMove(event: FederatedPointerEvent) {
+        if (this.dragging) {
+            this.handle.rotate(this.getAngle(event.global));
+        }
+    }
+
+    getAngle(global: PointData) {
+        const position = this.handle.parent.toLocal(global);
+        return Math.atan2(position.y - this.handle.y, position.x - this.handle.x)
+    }
+
+    /* Element positioning */
+    resize() {
         this.positionElements();
     }
 
@@ -79,10 +123,6 @@ class GameScene extends Scene {
 
         element.x = this.screenWidth / 2;
         element.y = this.screenHeight / 2;
-    }
-
-    resize() {
-        this.positionElements();
     }
 }
 
