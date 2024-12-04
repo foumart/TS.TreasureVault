@@ -2,6 +2,7 @@ import { Container, Graphics, Sprite, Texture } from "pixi.js";
 import { getTexture } from "./assetLoader";
 
 import { gsap } from "gsap";
+import { Rotation } from "./vault";
 
 class Handle extends Container {
 
@@ -10,9 +11,19 @@ class Handle extends Container {
     staticHandle: Sprite;
     staticHandleMask: Graphics;
 
-    initialAngle: number = 0;
-    startRotation: number = 0;
     animating: boolean = false;
+
+    // variables used for general handle 360 degrees drag rotation
+    initialDragRadians: number = 0;
+    initialHandleRadians: number = 0;
+
+    // when dragging begins or after every 60 degrees step this is set to the current handle rotation,
+    // so steps could be properly accumulated beyond 6 (because of 0-360 degree boundary)
+    currentStepRadians: number = 0;
+    // accumulate steps for CW/CCW rotation on the handle (positive value: CW, negative value: CCW)
+    currentSteps: number = 0;
+    // define the current rotation direction so multiple code entries could be handled with a single drag.
+    currentDirection: Rotation | undefined;
 
     constructor() {
         super();
@@ -46,38 +57,106 @@ class Handle extends Container {
         this.spinLikeCrazy();
     }
 
-    spinLikeCrazy() {
-        this.animateRotation(720, 1.5);
+    async spinLikeCrazy() {
+        await this.animateRotation(this.radiansToDegrees(this.handle.rotation) + 720, 1.5);
+        this.setRotation(0);
     }
 
-    animateRotation(degrees?: number, duration?: number) {
+    async animateRotation(degrees: number, duration?: number): Promise<void> {
+        if (this.animating) {
+            console.warn("Unexpected animateRotation call while still animating!");
+        }
+
         this.animating = true;
-        gsap.to([this.handle, this.handleShadow], {
-            rotation: this.degreesToRadians(degrees || 360),
-            duration: duration || 1,
-            onComplete: () => {
-                this.animating = false;
-            }
-        });
+        return new Promise((resolve) => {
+            gsap.to([this.handle, this.handleShadow], {
+                angle: degrees,
+                duration: duration || 1,
+                onComplete: () => {
+                    this.animating = false;
+                    resolve();
+                }
+            });
+         });
     }
 
-    setStartRotation(initialAngle: number) {
-        this.initialAngle = initialAngle;
-        this.startRotation = this.handle.rotation;
+    setStartRotation(initialDragRadians: number) {
+        this.initialDragRadians = initialDragRadians;
+        this.initialHandleRadians = this.handle.rotation;
+        this.currentStepRadians = this.handle.rotation;
+        this.currentSteps = 0;
+        this.currentDirection = undefined;
     }
 
-    rotate(currentAngle: number) {
-        const radians: number = this.startRotation + (currentAngle - this.initialAngle);
+    setRotation(currentAngleInRadians: number) {
+        let radians: number = this.initialHandleRadians + (currentAngleInRadians - this.initialDragRadians);
+
+        // Adjust the negative radians so we can count the rounded 60 degree steps properly
+        if (radians < 0) {
+            radians += 2 * Math.PI;
+        }
+
         this.handle.rotation = radians;
         this.handleShadow.rotation = radians;
+
+        // Do count rounded 60 degree steps in both directions
+        const initialAngle = this.radiansToDegrees(this.currentStepRadians);
+        const currentAngle = this.radiansToDegrees(radians);
+
+        let angleDifference = currentAngle - initialAngle;
+
+        // Adjusting the zero degree boundary (important)
+        if (angleDifference > 180) {
+            angleDifference -= 360;
+        } else if (angleDifference < -180) {
+            angleDifference += 360;
+        }
+
+        // Accumulate CW/CCW steps
+        if (Math.abs(angleDifference) >= 60) {
+            if (angleDifference > 0) {
+                if (!this.currentDirection) {
+                    this.currentDirection = Rotation.CW;
+                } else if (this.currentDirection == Rotation.CCW) {
+                    // TODO: The handle got reverted and now we have to send event
+                    // to break the current code entry and begin new immediately,
+                    // or end the game if 3 attempts were already tried.
+                    this.currentDirection = Rotation.CW;
+                    this.currentSteps = 0;
+                }
+                this.currentSteps += Math.floor(angleDifference / 60);
+            } else {
+                if (!this.currentDirection) {
+                    this.currentDirection = Rotation.CCW;
+                } else if (this.currentDirection == Rotation.CW) {
+                    // TODO
+                    this.currentDirection = Rotation.CCW;
+                    this.currentSteps = 0;
+                }
+                this.currentSteps -= Math.floor(Math.abs(angleDifference) / 60);
+            }
+            this.currentStepRadians = radians;
+
+            console.log(this.currentSteps);
+        }
     }
 
-    endRotation() {
-        this.animateRotation(this.getNearestTargetAngle(this.radiansToDegrees(this.handle.rotation)), 0.25);
+    /**
+    * Ends the rotation by animating the handle to the nearest target angle.
+    * @returns {Promise<void>} A promise that resolves when the animation is complete.
+    */
+    async endRotation(): Promise<void> {
+        await this.animateRotation(this.getNearestTargetAngle(this.radiansToDegrees(this.handle.rotation)), 0.25);
     }
 
+    /**
+    * Calculates the nearest target angle that is a multiple of 60 degrees.
+    * @param {number} currentDegrees - The current angle in degrees.
+    * @returns {number} The nearest target angle in degrees.
+    */
     getNearestTargetAngle(currentDegrees: number): number {
-        return Math.round(currentDegrees / 60) * 60;
+        const nearestRoundedMultiple = Math.round(currentDegrees / 60) * 60;
+        return nearestRoundedMultiple;
     }
 
     degreesToRadians(degrees: number): number {

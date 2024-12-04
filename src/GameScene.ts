@@ -71,7 +71,7 @@ class GameScene extends Scene {
         // make sure the handle is at rest (not crazy spinning or adjusting to 60 degrees rounded multiple)
         if (!this.handle.animating) {
             this.dragging = true;
-            this.handle.setStartRotation(this.getAngle(event.global))
+            this.handle.setStartRotation(this.getAngleInRadians(event.global));
             // listen for dragging outside the handle area so the interaction could be more convenient
             this.bgr.on("pointermove", this.onDragMove.bind(this));
         }
@@ -82,20 +82,23 @@ class GameScene extends Scene {
         if (this.dragging) {
             this.dragging = false;
             this.bgr.off("pointermove", this.onDragMove.bind(this));
-            this.handle.endRotation();
+            this.handle.endRotation()
+            .then(() => {
+                // check secret code
+            });
         }
     }
         
     onDragMove(event: FederatedPointerEvent) {
         event.stopPropagation();
         if (this.dragging) {
-            this.handle.rotate(this.getAngle(event.global));
+            this.handle.setRotation(this.getAngleInRadians(event.global));
         }
     }
 
-    getAngle(global: PointData) {
+    getAngleInRadians(global: PointData) {
         const position = this.handle.parent.toLocal(global);
-        return Math.atan2(position.y - this.handle.y, position.x - this.handle.x)
+        return Math.atan2(position.y - this.handle.y, position.x - this.handle.x);
     }
 
     /* Element positioning */
