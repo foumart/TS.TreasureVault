@@ -1,17 +1,19 @@
 import { Application, Container, ObservablePoint, Sprite, FederatedPointerEvent, PointData } from "pixi.js";
 
 import Scene from "./Scene";
-import { getTexture } from "./assetLoader";
+import { AssetManager } from "./AssetManager";
 import Handle from "./Handle";
-import { generateCode, secretCombo } from "./vault";
+import { CodeGenerator } from "./CodeGenerator";
+//import { generateCode, secretCombo } from "./CodeGenerator";
 
 class GameScene extends Scene {
     
     label: string = "GameScene";
 
+    assetManager!: AssetManager;
+
     app: Application;
-    screenWidth!: number;
-    screenHeight!: number;
+    codeGenerator: CodeGenerator;
 
     bgr!: Sprite;
     door!: Sprite;
@@ -20,28 +22,33 @@ class GameScene extends Scene {
     handle!: Handle;
     handleShadow!: Sprite;
 
+    screenWidth!: number;
+    screenHeight!: number;
+
     // The background image is resized in a way to fit well in any screen size.
-    // Here we define protected boundaries and for area that will always be visible.
+    // Here we define protected boundaries for area that will always be visible.
     // The following values are percentages of the background image width/height.
     // We'll use the background image's scale to set the scale of all other elements.
     minWidth: number = .45;
     minHeight: number = .65;
 
+    // if the handle is currently being dragged
     dragging: Boolean = false;
 
     constructor(app: Application) {
         super();
         this.app = app;
+        this.codeGenerator = new CodeGenerator();
         this.init();
     }
 
     init() {
-        this.bgr = new Sprite(getTexture("bg"));
+        this.bgr = new Sprite(this.assetManager.getTexture("bg"));
         this.bgr.anchor.set(0.5);
         this.bgr.interactive = true;
         this.addChild(this.bgr);
 
-        this.door = new Sprite(getTexture("door"));
+        this.door = new Sprite(this.assetManager.getTexture("door"));
         this.door.anchor.set(0.5);
         this.addChild(this.door);
 
@@ -62,7 +69,8 @@ class GameScene extends Scene {
 
     beginNewGame() {
         //currentCombos = [];
-        generateCode();
+        this.codeGenerator.generateCode();
+        //console.log(this.codeGenerator.getSecretCombo());
     }
 
     /* Handle Interaction */

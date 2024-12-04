@@ -1,45 +1,53 @@
 import { Container, Graphics, Sprite, Texture } from "pixi.js";
-import { getTexture } from "./assetLoader";
+import { AssetManager } from "./AssetManager";
 
 import { gsap } from "gsap";
-import { Rotation } from "./vault";
+import { Rotation } from "./CodeGenerator";
 
 class Handle extends Container {
 
+    assetManager: AssetManager;
+
+    // Handle and its drop-shadow with additional masked static part to preserve the point of light
     handle: Sprite;
     handleShadow: Sprite;
     staticHandle: Sprite;
     staticHandleMask: Graphics;
 
+    // Used to prevent dragging while the handle is animating
     animating: boolean = false;
 
-    // variables used for general handle 360 degrees drag rotation
+    // Variables used for general handle 360 degrees drag rotation
     initialDragRadians: number = 0;
     initialHandleRadians: number = 0;
 
-    // when dragging begins or after every 60 degrees step this is set to the current handle rotation,
+    // When dragging begins or after every 60 degrees step, this is set to the current handle rotation,
     // so steps could be properly accumulated beyond 6 (because of 0-360 degree boundary)
     currentStepRadians: number = 0;
-    // accumulate steps for CW/CCW rotation on the handle (positive value: CW, negative value: CCW)
+    
+    // Accumulate steps for CW/CCW rotation on the handle (positive value: CW, negative value: CCW)
     currentSteps: number = 0;
-    // define the current rotation direction so multiple code entries could be handled with a single drag.
+    
+    // Define the current rotation direction so multiple code entries could be handled with a single drag.
     currentDirection: Rotation | undefined;
 
     constructor() {
         super();
 
-        this.handleShadow = new Sprite(getTexture("handleShadow"));
+        this.assetManager = AssetManager.getInstance();
+
+        this.handleShadow = new Sprite(this.assetManager.getTexture("handleShadow"));
         this.handleShadow.anchor.set(0.5);
         this.addChild(this.handleShadow);
         this.handleShadow.position.x = 10;
         this.handleShadow.position.y = 15;
 
-        this.handle = new Sprite(getTexture("handle"));
+        this.handle = new Sprite(this.assetManager.getTexture("handle"));
         this.handle.anchor.set(0.5);
         this.addChild(this.handle);
 
         // Add some masked static part to preserve the point of light for added realism
-        this.staticHandle = new Sprite(getTexture("handle"));
+        this.staticHandle = new Sprite(this.assetManager.getTexture("handle"));
         this.staticHandle.anchor.set(0.5);
         this.addChild(this.staticHandle);
 
