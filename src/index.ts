@@ -1,6 +1,6 @@
-import { Application, Graphics, Texture, Assets, Sprite } from 'pixi.js';
+import { Application } from 'pixi.js';
 import { initDevtools } from '@pixi/devtools';
-import { preloadAssets, getTexture } from './assetLoader';
+import { preloadAssets } from './assetLoader';
 import LoadingScene from './LoadingScene';
 import GameScene from './GameScene';
 
@@ -43,8 +43,10 @@ let gameScene: GameScene;
 
 })();
 
-
-
+/**
+* Handles the window resize event.
+* @param {UIEvent} event - The resize event triggered by the window.
+*/
 function resize(event: UIEvent) {
     const target = event.target as Window;
     app.renderer.resize(target.innerWidth, target.innerHeight);

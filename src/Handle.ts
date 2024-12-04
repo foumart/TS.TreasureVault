@@ -12,6 +12,7 @@ class Handle extends Container {
 
     initialAngle: number = 0;
     startRotation: number = 0;
+    animating: boolean = false;
 
     constructor() {
         super();
@@ -50,9 +51,13 @@ class Handle extends Container {
     }
 
     animateRotation(degrees?: number, duration?: number) {
+        this.animating = true;
         gsap.to([this.handle, this.handleShadow], {
             rotation: this.degreesToRadians(degrees || 360),
-            duration: duration || 1
+            duration: duration || 1,
+            onComplete: () => {
+                this.animating = false;
+            }
         });
     }
 

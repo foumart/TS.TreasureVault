@@ -3,6 +3,7 @@ import { Application, Container, ObservablePoint, Sprite, FederatedPointerEvent,
 import Scene from "./Scene";
 import { getTexture } from "./assetLoader";
 import Handle from "./Handle";
+import { generateCode, secretCombo } from "./vault";
 
 class GameScene extends Scene {
     
@@ -55,24 +56,38 @@ class GameScene extends Scene {
             .on("pointermove", this.onDragMove.bind(this));
 
         this.positionElements();
+
+        this.beginNewGame();
+    }
+
+    beginNewGame() {
+        //currentCombos = [];
+        generateCode();
     }
 
     /* Handle Interaction */
     onDragStart(event: FederatedPointerEvent) {
-        this.dragging = true;
-        this.handle.setStartRotation(this.getAngle(event.global))
         event.stopPropagation();
-        // listen for dragging outside the handle area so the interaction could be more convenient
-        this.bgr.on("pointermove", this.onDragMove.bind(this));
+        // make sure the handle is at rest (not crazy spinning or adjusting to 60 degrees rounded multiple)
+        if (!this.handle.animating) {
+            this.dragging = true;
+            this.handle.setStartRotation(this.getAngle(event.global))
+            // listen for dragging outside the handle area so the interaction could be more convenient
+            this.bgr.on("pointermove", this.onDragMove.bind(this));
+        }
     }
         
-    onDragEnd() {
-        this.dragging = false;
-        this.bgr.off("pointermove", this.onDragMove.bind(this));
-        this.handle.endRotation();
+    onDragEnd(event: FederatedPointerEvent) {
+        event.stopPropagation();
+        if (this.dragging) {
+            this.dragging = false;
+            this.bgr.off("pointermove", this.onDragMove.bind(this));
+            this.handle.endRotation();
+        }
     }
         
     onDragMove(event: FederatedPointerEvent) {
+        event.stopPropagation();
         if (this.dragging) {
             this.handle.rotate(this.getAngle(event.global));
         }
