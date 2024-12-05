@@ -28,7 +28,7 @@ export class AssetManager {
     */
     async preloadAssets() {
         const assetPromises = this.assetContext.keys().map(async key => {
-            const assetPath = key.replace('./', '/assets/');
+            const assetPath = key.replace('./', '/feedback/delivery/DreamShot/dist/assets/');
             const texture = await Assets.load(assetPath);
         
             // Store the texture in the textures object with the asset name as the key

@@ -5,7 +5,7 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'public/dist'),
-        publicPath: '/dist/',
+        publicPath: '/feedback/delivery/DreamShot/dist/',
     },
     resolve: {
         extensions: ['.ts', '.js', '.json'],
@@ -25,8 +25,8 @@ module.exports = {
                         loader: 'file-loader',
                         options: {
                             name: '[path][name].[ext]',
-                            outputPath: '../',
-                            publicPath: '/assets/',
+                            outputPath: 'assets/',
+                            publicPath: '/dist/assets/',
                         },
                     },
                 ],
