@@ -14,13 +14,13 @@ export class Handle extends Container {
 
     assetManager: AssetManager;
 
-    // Handle and its drop-shadow with additional masked static part to preserve the point of light
-    handle: Sprite;
+    // Handle assets: body, drop-shadow and additional masked static part to preserve the point of light
+    handleSprite: Sprite;
     handleShadow: Sprite;
     staticHandle: Sprite;
     staticHandleMask: Graphics;
 
-    // Used to prevent dragging while the handle is animating
+    // Used to prevent interactions while the handle is animating
     animating: boolean = false;
 
     // Variables used for general handle 360 degrees drag rotation
@@ -48,9 +48,9 @@ export class Handle extends Container {
         this.handleShadow.position.x = 10;
         this.handleShadow.position.y = 15;
 
-        this.handle = new Sprite(this.assetManager.getTexture("handle"));
-        this.handle.anchor.set(0.5);
-        this.addChild(this.handle);
+        this.handleSprite = new Sprite(this.assetManager.getTexture("handle"));
+        this.handleSprite.anchor.set(0.5);
+        this.addChild(this.handleSprite);
 
         // Add some masked static part to preserve the point of light for added realism
         this.staticHandle = new Sprite(this.assetManager.getTexture("handle"));
@@ -67,13 +67,11 @@ export class Handle extends Container {
 
         this.addChild(this.staticHandleMask);
         this.staticHandle.mask = this.staticHandleMask;
-
-        this.spinLikeCrazy();
     }
 
     async spinLikeCrazy() {
         this.playSoundSignal(1.5);
-        await this.animateRotation(this.radiansToDegrees(this.handle.rotation) + 720, 1.5, "power2.out");
+        await this.animateRotation(this.radiansToDegrees(this.handleSprite.rotation) + 720, 1.5, "power2.out");
     }
 
     async animateRotation(degrees: number, duration?: number, ease: string = "power1.out"): Promise<void> {
@@ -83,7 +81,7 @@ export class Handle extends Container {
 
         this.animating = true;
         return new Promise((resolve) => {
-            gsap.to([this.handle, this.handleShadow], {
+            gsap.to([this.handleSprite, this.handleShadow], {
                 angle: degrees,
                 duration: duration || 1,
                 ease: ease,
@@ -97,8 +95,8 @@ export class Handle extends Container {
 
     setStartRotation(initialDragRadians: number) {
         this.initialDragRadians = initialDragRadians;
-        this.initialHandleRadians = this.handle.rotation;
-        this.currentStepRadians = this.handle.rotation;
+        this.initialHandleRadians = this.handleSprite.rotation;
+        this.currentStepRadians = this.handleSprite.rotation;
         this.currentSteps = 0;
         this.currentDirection = Rotation.STILL;
     }
@@ -111,7 +109,7 @@ export class Handle extends Container {
             radians += 2 * Math.PI;
         }
 
-        this.handle.rotation = radians;
+        this.handleSprite.rotation = radians;
         this.handleShadow.rotation = radians;
 
         // Do count rounded 60 degree steps in both directions
@@ -170,7 +168,9 @@ export class Handle extends Container {
     * @returns {Promise<void>} A promise that resolves when the animation is complete.
     */
     async endRotation(): Promise<void> {
-        await this.animateRotation(this.getNearestTargetAngle(this.radiansToDegrees(this.handle.rotation)), 0.25);
+        // TODO: improve precision as currently player can rotate a little
+        // and use the automatic positioning animation to skip steps.
+        await this.animateRotation(this.getNearestTargetAngle(this.radiansToDegrees(this.handleSprite.rotation)), 0.25);
     }
 
     /**

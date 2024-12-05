@@ -5,11 +5,6 @@ export class LoadingScene extends Scene {
     
     label: string = "LoadingScene";
 
-    constructor() {
-        super();
-        this.init();
-    }
-
     init() {
         const style = new TextStyle({
             fontFamily: "Verdana",
