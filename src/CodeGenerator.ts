@@ -10,10 +10,10 @@ type SecretCombo = [Rotation, Steps];
 
 
 export class CodeGenerator {
-    comboLength: number;
-    secretCombo!: Array<SecretCombo>;
-    currentCombo!: Array<SecretCombo>; // player entried secret codes so far
-    lastRotation: Rotation = Rotation.STILL;
+    private comboLength: number;
+    private secretCombo!: Array<SecretCombo>;
+    public currentCombo!: Array<SecretCombo>; // player secret codes entries so far
+    private lastRotation: Rotation = Rotation.STILL;
 
     constructor(comboLength: number = 3) {
         this.comboLength = comboLength;
@@ -22,7 +22,7 @@ export class CodeGenerator {
     /**
     * Generates a secret combination code consisting of a series of steps and rotations.
     */
-    generateCode() {
+    public generateCode() {
         this.secretCombo = [];
         this.currentCombo = [];
         this.lastRotation = Rotation.STILL;
@@ -37,7 +37,7 @@ export class CodeGenerator {
         console.log(this.formatSecretCombo(this.secretCombo));
     }
     
-    getRandomNumber(): Steps {
+    private getRandomNumber(): Steps {
         return (Math.floor(Math.random() * 9) + 1) as Steps;
     }
     
@@ -47,7 +47,7 @@ export class CodeGenerator {
     * @param {Rotation} exclude - The previous rotation direction to avoid.
     * @returns {Rotation} A random rotation direction, either 'clockwise' or 'counterclockwise'.
     */
-    getRandomRotation(exclude: Rotation): Rotation {
+    private getRandomRotation(exclude: Rotation): Rotation {
         if (exclude != Rotation.STILL) {
             return exclude == Rotation.CCW ? Rotation.CW : Rotation.CCW;
         }
@@ -61,16 +61,52 @@ export class CodeGenerator {
     * @param {SecretCombo} combo - The array of rotation and number pairs.
     * @returns {string} A formatted string representing the secret combination.
     */
-    formatSecretCombo(combo: SecretCombo[]): string {
+    private formatSecretCombo(combo: SecretCombo[]): string {
         return combo.map(([rotation, number]) => `${number} ${rotation}`).join(', ');
     }
-    
+
     /**
-    * Returns the generated secret combination.
-    * 
-    * @returns {SecretCombo[]} The secret combination array.
+    * Checks if two secret combos are matching.
+    *
+    * @param {SecretCombo} userCombo - The user's combination consisting of rotation and steps.
+    * @param {SecretCombo} secretCombo - The secret combination consisting of rotation and steps.
+    * @returns {boolean} True if the user's combination matches the secret combination, false otherwise.
     */
-    getSecretCombo(): SecretCombo[] {
-        return this.secretCombo;
+    private checkComboMatching(userCombo: SecretCombo, secretCombo: SecretCombo): boolean {
+        const [userRotation, userSteps] = userCombo;
+        const [secretRotation, secretSteps] = secretCombo;
+
+        return userRotation === secretRotation && userSteps === secretSteps;
     }
+
+    /**
+    * Checks if the user-entered combo matches the secret combo.
+    * 
+    * @returns {boolean} True if the combos match, false otherwise.
+    */
+    public isSecretComboMatching(): boolean {
+        if (this.currentCombo.length !== this.comboLength) {
+            return false;
+        }
+
+        let matchingSoFar = true;
+        for (let i = 0; i < this.currentCombo.length; i++) {
+            if (!this.checkComboMatching(this.currentCombo[i], this.secretCombo[i])) {
+                matchingSoFar = false;
+            }
+        }
+
+        return matchingSoFar;
+    }
+
+    // Note: the following methods expose the secret code length, I wanted to
+    // have it hidden as well, but it does not work well with the current gameplay.
+    public areComboEntriesExceeding(): boolean {
+        return this.currentCombo.length >= this.comboLength;
+    }
+
+    public areComboEntriesEnough(): boolean {
+        return this.currentCombo.length == this.comboLength - 1;
+    }
+
 }

@@ -3,6 +3,7 @@ import { AssetManager } from "./AssetManager";
 
 import { gsap } from "gsap";
 import { Rotation } from "./CodeGenerator";
+import { playTickSound } from "./sound";
 
 export interface StepsEvent {
     direction: Rotation;
@@ -71,11 +72,11 @@ export class Handle extends Container {
     }
 
     async spinLikeCrazy() {
-        await this.animateRotation(this.radiansToDegrees(this.handle.rotation) + 720, 1.5);
-        this.setRotation(0);
+        this.playSoundSignal(1.5);
+        await this.animateRotation(this.radiansToDegrees(this.handle.rotation) + 720, 1.5, "power2.out");
     }
 
-    async animateRotation(degrees: number, duration?: number): Promise<void> {
+    async animateRotation(degrees: number, duration?: number, ease: string = "power1.out"): Promise<void> {
         if (this.animating) {
             console.warn("Unexpected animateRotation call while still animating!");
         }
@@ -85,6 +86,7 @@ export class Handle extends Container {
             gsap.to([this.handle, this.handleShadow], {
                 angle: degrees,
                 duration: duration || 1,
+                ease: ease,
                 onComplete: () => {
                     this.animating = false;
                     resolve();
@@ -145,6 +147,9 @@ export class Handle extends Container {
             this.currentStepRadians = radians;
 
             console.log(this.currentSteps);
+
+            // play a short sound to hilight each step
+            playTickSound();
         }
     }
 
@@ -184,5 +189,30 @@ export class Handle extends Container {
 
     radiansToDegrees(radians: number): number {
         return radians * (180 / Math.PI);
+    }
+
+    delay(seconds: number): Promise<void> {
+        return new Promise((resolve) => {
+            gsap.delayedCall(seconds, resolve);
+        });
+    }
+
+    // temporary sound effect (to avoid adding sound libraries and files)
+    playSoundSignal(duration: number) {
+        const tween = { progress: 0 };
+        let lastProgress = 0;
+
+        gsap.to(tween, {
+            progress: 0.8,
+            duration: duration,
+            ease: "power2.out",
+            onUpdate: function() {
+                if (tween.progress - lastProgress >= 0.1) {
+                    const volume = 0.75 * (1 - tween.progress);
+                    playTickSound(volume);
+                    lastProgress = tween.progress;
+                }
+            }
+        });
     }
 }
