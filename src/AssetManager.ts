@@ -7,6 +7,9 @@ export class AssetManager {
     // Dynamically require all assets in the 'assets/' directory. (Webpack module)
     private assetContext = require.context('/assets', true, /\.(png|jpe?g)$/);
 
+    // Dynamically change the asset path to load from based on webpack mode.
+    private assetBasePath = __ASSET_BASE_PATH__ || '/assets/';
+
     // A dictionary to store textures with asset names as keys and Texture object values.
     private textures: { [key: string]: Texture } = {};
 
@@ -28,7 +31,7 @@ export class AssetManager {
     */
     async preloadAssets() {
         const assetPromises = this.assetContext.keys().map(async key => {
-            const assetPath = key.replace('./', '/assets/');
+            const assetPath = key.replace('./', this.assetBasePath);
             const texture = await Assets.load(assetPath);
         
             // Store the texture in the textures object with the asset name as the key

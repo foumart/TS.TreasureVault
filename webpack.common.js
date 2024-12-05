@@ -1,12 +1,11 @@
 const path = require('path');
+const dotenv = require('dotenv');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+dotenv.config();
 
 module.exports = {
     entry: './src/TreasureVault.ts',
-    output: {
-        filename: 'bundle.js',
-        path: path.resolve(__dirname, 'public/dist'),
-        publicPath: '/dist/',
-    },
     resolve: {
         extensions: ['.ts', '.js', '.json'],
         modules: [path.resolve(__dirname, 'src'), 'node_modules'],
@@ -33,26 +32,11 @@ module.exports = {
             },
         ],
     },
-    mode: 'development',
-    optimization: {
-        splitChunks: {
-            chunks: 'async',
-            cacheGroups: {
-                default: false,
-                vendors: false,
-            },
-        },
-    },
-    devtool: 'source-map',
-    devServer: {
-        static: {
-            directory: path.join(__dirname, 'public'),
-        },
-        compress: true,
-        port: 9000,
-        open: true,
-        liveReload: true,
-        watchFiles: ['src/**/*', 'public/**/*'],
-        hot: true
-    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: './index.html',
+            filename: '../index.html',
+            inject: 'body',
+        }),
+    ],
 };
