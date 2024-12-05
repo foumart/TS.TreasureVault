@@ -14,5 +14,3 @@ export abstract class Scene extends Container {
 
     abstract init(): void
 }
-
-export default Scene;

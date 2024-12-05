@@ -1,8 +1,7 @@
 import { Text, TextStyle } from "pixi.js";
+import { Scene } from "./Scene";
 
-import Scene from "./Scene";
-
-class LoadingScene extends Scene {
+export class LoadingScene extends Scene {
     
     label: string = "LoadingScene";
 
@@ -28,5 +27,3 @@ class LoadingScene extends Scene {
         this.addChild(text);
     }
 }
-
-export default LoadingScene;

@@ -1,15 +1,19 @@
 export enum Rotation {
     CW = 'clockwise',
-    CCW = 'counterclockwise'
+    CCW = 'counterclockwise',
+    STILL = 'still' // instead of relying on undefined | null union types
 }
 
-type Steps = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export type Steps = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+type SecretCombo = [Rotation, Steps];
 
 
 export class CodeGenerator {
     comboLength: number;
-    secretCombo: [Steps, Rotation][] = [];
-    lastRotation: Rotation | null = null;
+    secretCombo!: Array<SecretCombo>;
+    currentCombo!: Array<SecretCombo>; // player entried secret codes so far
+    lastRotation: Rotation = Rotation.STILL;
 
     constructor(comboLength: number = 3) {
         this.comboLength = comboLength;
@@ -20,12 +24,13 @@ export class CodeGenerator {
     */
     generateCode() {
         this.secretCombo = [];
-        this.lastRotation = null;
+        this.currentCombo = [];
+        this.lastRotation = Rotation.STILL;
         
         for (let i = 0; i < this.comboLength; i++) {
             const number = this.getRandomNumber();
             const rotation = this.getRandomRotation(this.lastRotation);
-            this.secretCombo.push([number, rotation]);
+            this.secretCombo.push([rotation, number]);
             this.lastRotation = rotation;
         }
         
@@ -37,12 +42,13 @@ export class CodeGenerator {
     }
     
     /**
-    * Generates a random rotation direction, ensuring it is different from the optional {exclude} param.
-    * @param {Rotation | null} exclude - The previous rotation direction to avoid.
+    * Generates a random rotation direction, ensuring it is different from the optional "exclude" param.
+    * 
+    * @param {Rotation} exclude - The previous rotation direction to avoid.
     * @returns {Rotation} A random rotation direction, either 'clockwise' or 'counterclockwise'.
     */
-    getRandomRotation(exclude: Rotation | null): Rotation {
-        if (exclude) {
+    getRandomRotation(exclude: Rotation): Rotation {
+        if (exclude != Rotation.STILL) {
             return exclude == Rotation.CCW ? Rotation.CW : Rotation.CCW;
         }
     
@@ -51,18 +57,20 @@ export class CodeGenerator {
     
     /**
     * Formats the secret combination array into a readable string.
-    * @param {[number, Rotation]} combo - The array of number and rotation pairs.
+    * 
+    * @param {SecretCombo} combo - The array of rotation and number pairs.
     * @returns {string} A formatted string representing the secret combination.
     */
-    formatSecretCombo(combo: [number, Rotation][]): string {
-        return combo.map(([number, rotation]) => `${number} ${rotation}`).join(', ');
+    formatSecretCombo(combo: SecretCombo[]): string {
+        return combo.map(([rotation, number]) => `${number} ${rotation}`).join(', ');
     }
     
     /**
     * Returns the generated secret combination.
-    * @returns {[Steps, Rotation][]} The secret combination array.
+    * 
+    * @returns {SecretCombo[]} The secret combination array.
     */
-    getSecretCombo(): [Steps, Rotation][] {
+    getSecretCombo(): SecretCombo[] {
         return this.secretCombo;
     }
 }

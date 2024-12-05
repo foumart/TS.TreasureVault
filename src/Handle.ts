@@ -1,10 +1,15 @@
-import { Container, Graphics, Sprite, Texture } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import { AssetManager } from "./AssetManager";
 
 import { gsap } from "gsap";
 import { Rotation } from "./CodeGenerator";
 
-class Handle extends Container {
+export interface StepsEvent {
+    direction: Rotation;
+    steps: number;
+}
+
+export class Handle extends Container {
 
     assetManager: AssetManager;
 
@@ -29,7 +34,7 @@ class Handle extends Container {
     currentSteps: number = 0;
     
     // Define the current rotation direction so multiple code entries could be handled with a single drag.
-    currentDirection: Rotation | undefined;
+    currentDirection: Rotation = Rotation.STILL;
 
     constructor() {
         super();
@@ -93,7 +98,7 @@ class Handle extends Container {
         this.initialHandleRadians = this.handle.rotation;
         this.currentStepRadians = this.handle.rotation;
         this.currentSteps = 0;
-        this.currentDirection = undefined;
+        this.currentDirection = Rotation.STILL;
     }
 
     setRotation(currentAngleInRadians: number) {
@@ -123,23 +128,17 @@ class Handle extends Container {
         // Accumulate CW/CCW steps
         if (Math.abs(angleDifference) >= 60) {
             if (angleDifference > 0) {
-                if (!this.currentDirection) {
+                if (this.currentDirection == Rotation.STILL) {
                     this.currentDirection = Rotation.CW;
                 } else if (this.currentDirection == Rotation.CCW) {
-                    // TODO: The handle got reverted and now we have to send event
-                    // to break the current code entry and begin new immediately,
-                    // or end the game if 3 attempts were already tried.
-                    this.currentDirection = Rotation.CW;
-                    this.currentSteps = 0;
+                    this.revertHandle(Rotation.CW);
                 }
                 this.currentSteps += Math.floor(angleDifference / 60);
             } else {
-                if (!this.currentDirection) {
+                if (this.currentDirection == Rotation.STILL) {
                     this.currentDirection = Rotation.CCW;
                 } else if (this.currentDirection == Rotation.CW) {
-                    // TODO
-                    this.currentDirection = Rotation.CCW;
-                    this.currentSteps = 0;
+                    this.revertHandle(Rotation.CCW);
                 }
                 this.currentSteps -= Math.floor(Math.abs(angleDifference) / 60);
             }
@@ -147,6 +146,18 @@ class Handle extends Container {
 
             console.log(this.currentSteps);
         }
+    }
+
+    /**
+    * Emits the current steps and rotation direction when the handle gets rotated in the
+    * opposite direction, which is treated as an instruction to end the current secret code entry.
+    * 
+    * @param {Rotation} rotation - The new rotation direction to set after reverting.
+    */
+    revertHandle(rotation: Rotation) {
+        this.emit('sendSteps', {direction: this.currentDirection, steps: this.currentSteps});
+        this.currentDirection = rotation;
+        this.currentSteps = 0;
     }
 
     /**
@@ -175,5 +186,3 @@ class Handle extends Container {
         return radians * (180 / Math.PI);
     }
 }
-
-export default Handle;

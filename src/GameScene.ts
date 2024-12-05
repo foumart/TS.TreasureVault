@@ -1,12 +1,11 @@
 import { Application, Container, ObservablePoint, Sprite, FederatedPointerEvent, PointData } from "pixi.js";
 
-import Scene from "./Scene";
+import { Scene } from "./Scene";
 import { AssetManager } from "./AssetManager";
-import Handle from "./Handle";
-import { CodeGenerator } from "./CodeGenerator";
-//import { generateCode, secretCombo } from "./CodeGenerator";
+import { Handle, StepsEvent } from "./Handle";
+import { CodeGenerator, Rotation, Steps } from "./CodeGenerator";
 
-class GameScene extends Scene {
+export class GameScene extends Scene {
     
     label: string = "GameScene";
 
@@ -60,7 +59,8 @@ class GameScene extends Scene {
             .on("pointerdown", this.onDragStart.bind(this))
             .on("pointerup", this.onDragEnd.bind(this))
             .on("pointerupoutside", this.onDragEnd.bind(this))
-            .on("pointermove", this.onDragMove.bind(this));
+            .on("pointermove", this.onDragMove.bind(this))
+            .on('sendSteps', this.onSentStepsEvent.bind(this));
 
         this.positionElements();
 
@@ -68,20 +68,66 @@ class GameScene extends Scene {
     }
 
     beginNewGame() {
-        //currentCombos = [];
         this.codeGenerator.generateCode();
         //console.log(this.codeGenerator.getSecretCombo());
+    }
+
+    enterNextSecretCode(currentDirection: Rotation, currentSteps: number, stillDragging: boolean = false) {
+        console.groupEnd();
+        this.codeGenerator.currentCombo.push([currentDirection, Math.abs(currentSteps) as Steps]);
+        if (this.checkSecretCombos()) {
+            console.warn("CORRECT! Well done!");
+            this.dragging = false;
+            this.bgr.off("pointermove", this.onDragMove.bind(this));
+        } else {
+            if (this.codeGenerator.currentCombo.length >= this.codeGenerator.secretCombo.length) {
+                console.warn("INCORRECT!!!");
+                this.handle.spinLikeCrazy()
+                .then(()=>{
+                    this.beginNewGame();
+                });
+            } else if (stillDragging) {
+                console.group(`Entry ${this.codeGenerator.currentCombo.length + 1}`);
+            }
+        }
+    }
+
+    /**
+    * Checks if the user-entered combo matches the secret combo.
+    * @returns {boolean} True if the combos match, false otherwise.
+    */
+    checkSecretCombos(): boolean {
+        const { currentCombo, secretCombo } = this.codeGenerator;
+    
+        if (currentCombo.length !== secretCombo.length) {
+            return false;
+        }
+
+        for (let i = 0; i < currentCombo.length; i++) {
+            const [userRotation, userSteps] = currentCombo[i];
+            const [secretRotation, secretSteps] = secretCombo[i];
+            
+            if (userRotation !== secretRotation || userSteps !== secretSteps) {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /* Handle Interaction */
     onDragStart(event: FederatedPointerEvent) {
         event.stopPropagation();
-        // make sure the handle is at rest (not crazy spinning or adjusting to 60 degrees rounded multiple)
+        // make sure the handle is at rest (not "crazy spinning" or adjusting to 60 degrees rounded multiple)
         if (!this.handle.animating) {
             this.dragging = true;
             this.handle.setStartRotation(this.getAngleInRadians(event.global));
             // listen for dragging outside the handle area so the interaction could be more convenient
             this.bgr.on("pointermove", this.onDragMove.bind(this));
+            // debug
+            console.group(`Entry ${this.codeGenerator.currentCombo.length + 1}`);
         }
     }
         
@@ -92,7 +138,7 @@ class GameScene extends Scene {
             this.bgr.off("pointermove", this.onDragMove.bind(this));
             this.handle.endRotation()
             .then(() => {
-                // check secret code
+                this.enterNextSecretCode(this.handle.currentDirection, this.handle.currentSteps);
             });
         }
     }
@@ -107,6 +153,10 @@ class GameScene extends Scene {
     getAngleInRadians(global: PointData) {
         const position = this.handle.parent.toLocal(global);
         return Math.atan2(position.y - this.handle.y, position.x - this.handle.x);
+    }
+
+    onSentStepsEvent(event: StepsEvent) {
+        this.enterNextSecretCode(event.direction, event.steps, true);
     }
 
     /* Element positioning */
@@ -151,5 +201,3 @@ class GameScene extends Scene {
         element.y = this.screenHeight / 2;
     }
 }
-
-export default GameScene;

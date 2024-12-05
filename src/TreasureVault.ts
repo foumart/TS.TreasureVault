@@ -1,8 +1,8 @@
 import { Application } from 'pixi.js';
 import { initDevtools } from '@pixi/devtools';
 import { AssetManager } from './AssetManager';
-import LoadingScene from './LoadingScene';
-import GameScene from './GameScene';
+import { LoadingScene } from './LoadingScene';
+import { GameScene } from './GameScene';
 
 class TreasureVault {
     app: Application;
