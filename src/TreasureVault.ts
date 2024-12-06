@@ -1,9 +1,10 @@
-import { Application } from 'pixi.js';
+import { Application, ContainerChild } from 'pixi.js';
 import { initDevtools } from '@pixi/devtools';
 import { AssetManager } from './AssetManager';
 import { LoadingScene } from './LoadingScene';
 import { GameScene } from './GameScene';
 import { VaultScene } from './VaultScene';
+import { Scene } from './Scene';
 
 class TreasureVault {
     app: Application;
@@ -41,6 +42,12 @@ class TreasureVault {
 
         await this.assetManager.preloadAssets();
 
+        await this.loadingScene.waitForInteraction();
+
+        this.beginGame();
+    }
+
+    beginGame() {
         this.app.stage.removeChild(this.loadingScene);
 
         this.gameScene = new GameScene(this.app);
@@ -76,8 +83,9 @@ class TreasureVault {
     resize(event: UIEvent) {
         const target = event.target as Window;
         this.app.renderer.resize(target.innerWidth, target.innerHeight);
-        if (this.app.stage.children.includes(this.gameScene)) this.gameScene.resize();
-        else if (this.app.stage.children.includes(this.vaultScene)) this.vaultScene.resize();
+
+        // We don't add to stage anything other than Scenes, so this is safe.
+        this.app.stage.children.forEach((scene: ContainerChild) => (scene as Scene).resize());
     }
 }
 

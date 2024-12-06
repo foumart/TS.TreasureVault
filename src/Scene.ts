@@ -21,6 +21,8 @@ export abstract class Scene extends Container {
     constructor(app: Application) {
         super();
         this.app = app;
+        this.screenWidth = this.app.screen.width;
+        this.screenHeight = this.app.screen.height;
         this.assetManager = AssetManager.getInstance();
         this.init();
     }
@@ -28,8 +30,6 @@ export abstract class Scene extends Container {
     abstract init(): void
 
     centerElement(element: Sprite) {
-        this.screenWidth = this.app.screen.width;
-        this.screenHeight = this.app.screen.height;
         const textureWidth = element.texture.width;
         const textureHeight = element.texture.height;
 
@@ -53,6 +53,8 @@ export abstract class Scene extends Container {
     }
 
     resize() {
+        this.screenWidth = this.app.screen.width;
+        this.screenHeight = this.app.screen.height;
         this.positionElements();
     }
 

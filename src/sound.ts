@@ -2,11 +2,14 @@
  * Temporary sound player (to avoid adding sound libraries and files)
  */
 
-let audioContext = new AudioContext();
+let audioContext!: AudioContext;
 
 export function playTickSound(volume: number = 0.5) {
-    if (audioContext.state !== 'running') {
+    if (!audioContext) {
         audioContext = new AudioContext();
+    }
+
+    if (audioContext.state !== 'running') {
         return;
     }
 
