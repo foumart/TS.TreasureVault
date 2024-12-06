@@ -81,8 +81,8 @@ export class VaultScene extends Scene {
     async openVault() {
         // Cheap open animation, still better than nothing..
         gsap.to(this.handle, {
-            x: this.handle.x + 110,
-            width: this.handle.width-40,
+            x: this.handle.x + 125,
+            width: this.handle.width-30,
             duration: 1,
             ease: "power4.in"
         });

@@ -11,10 +11,10 @@ export abstract class Scene extends Container {
     screenWidth!: number;
     screenHeight!: number;
 
-    // The background image is resized in a way to fit well in any screen size.
-    // Here we define protected boundaries for area that will always be visible.
-    // The following values are percentages of the background image width/height.
-    // We'll use the background image's scale to set the scale of all other elements.
+    /**
+     * Defining a protected boundaries area that will always be visible, no matter the screen size.
+     * The following values are percentages of the main centered element (the background) width/height.
+     */
     minWidth: number = .45;
     minHeight: number = .65;
 
@@ -29,6 +29,12 @@ export abstract class Scene extends Container {
 
     abstract init(): void
 
+    /**
+    * Centers a PIXI.Sprite element on the screen, scaling it to fit within the screen dimensions.
+    * Useful for setting the scale and position of background images.
+    * 
+    * @param {PIXI.Sprite} element - The sprite to be centered and scaled.
+    */
     centerElement(element: Sprite) {
         const textureWidth = element.texture.width;
         const textureHeight = element.texture.height;
@@ -62,6 +68,15 @@ export abstract class Scene extends Container {
         
     }
 
+    /**
+    * Resizes and repositions a PIXI.Sprite or PIXI.Container element based on a given scale and optional offsets.
+    * The first argument is usually the scale of an already resized background via centerElement()
+    * 
+    * @param {PIXI.ObservablePoint} scale - The scale to apply to the element.
+    * @param {PIXI.Sprite | PIXI.Container} element - The element to be resized and repositioned.
+    * @param {number} [offsetX=0] - Optional horizontal offset.
+    * @param {number} [offsetY=0] - Optional vertical offset.
+    */
     resizeElement(scale: ObservablePoint, element: Sprite | Container, offsetX: number = 0, offsetY: number = 0) {
         element.scale = scale;
         element.x = this.screenWidth / 2 + offsetX * scale.x;

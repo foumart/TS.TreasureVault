@@ -96,6 +96,9 @@ export class Handle extends Container {
     setStartRotation(initialDragRadians: number) {
         this.initialDragRadians = initialDragRadians;
         this.initialHandleRadians = this.handleSprite.rotation;
+    }
+
+    resetCurrentSteps() {
         this.currentStepRadians = this.handleSprite.rotation;
         this.currentSteps = 0;
         this.currentDirection = Rotation.STILL;
@@ -164,23 +167,25 @@ export class Handle extends Container {
     }
 
     /**
-    * Ends the rotation by animating the handle to the nearest target angle.
+    * Ends the rotation by animating the handle to the latest step taken.
+    * 
     * @returns {Promise<void>} A promise that resolves when the animation is complete.
     */
     async endRotation(): Promise<void> {
-        // TODO: improve precision as currently player can rotate a little
-        // and use the automatic positioning animation to skip steps.
         await this.animateRotation(this.getNearestTargetAngle(this.radiansToDegrees(this.handleSprite.rotation)), 0.25);
     }
 
     /**
-    * Calculates the nearest target angle that is a multiple of 60 degrees.
+    * Calculates the angle (multiple of 60 degrees) of the latest handle step taken.
+    * 
     * @param {number} currentDegrees - The current angle in degrees.
     * @returns {number} The nearest target angle in degrees.
     */
     getNearestTargetAngle(currentDegrees: number): number {
-        const nearestRoundedMultiple = Math.round(currentDegrees / 60) * 60;
-        return nearestRoundedMultiple;
+        const closestStepRadians = this.currentStepRadians - this.handleSprite.rotation > 0
+            ? Math.ceil(currentDegrees / 60) * 60
+            : Math.floor(currentDegrees / 60) * 60;
+        return closestStepRadians;
     }
 
     degreesToRadians(degrees: number): number {

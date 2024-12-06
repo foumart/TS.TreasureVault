@@ -91,10 +91,12 @@ export class GameScene extends Scene {
             // Listen for dragging outside the handle area so the interaction could be more convenient
             this.bgr.on("pointermove", this.onDragMove.bind(this));
 
+            this.handle.setStartRotation(this.getAngleInRadians(event.global));
+
             // Begin new secret code entry
             if (!this.handle.currentSteps) {
-                this.handle.setStartRotation(this.getAngleInRadians(event.global));
                 console.log(`Entry ${this.codeGenerator.currentCombo.length + 1}`);
+                this.handle.resetCurrentSteps();
             }
         }
     }
