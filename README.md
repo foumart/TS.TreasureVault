@@ -1,5 +1,7 @@
 # Treasure Vault mini game
 
+### [Play Treasure Vault](https://foumartgames.com/games/TreasureVault/)
+
 ### How to play
 
 Click and drag the vault handle to rotate it. The game can be solved with just one interaction, can you figure it out?
